@@ -1,0 +1,20 @@
+version: '2'
+services:
+  es-storage:
+    scale: 2
+    start_on_create: true
+  es-data:
+    scale: 2
+    start_on_create: true
+  es-sysctl:
+    scale: 2
+    start_on_create: true
+  es-client:
+    scale: 3
+    start_on_create: true
+  kibananew:
+    scale: 1
+    start_on_create: true
+  es-master:
+    scale: 3
+    start_on_create: true
