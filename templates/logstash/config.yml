@@ -1,9 +1,0 @@
-name: Elastic Search - Kibana
-description: |
-  (Experimental) Elastic Search with Kibana
-version: 0.10.2.0-rancher
-category: Clustering
-maintainer: "Pavithra.KC <Pavithra.KC@intlfcstone.com>"
-minimum_rancher_version: v0.59.0
-license: 
-projectURL: https://intlfcstone.visualstudio.com/DefaultCollection/INTL%20FCStone%20Markets/_git/Pontoon
