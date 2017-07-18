@@ -101,7 +101,7 @@ services:
         depends_on: 
             - es-master
 
-        kibananew:
+    kibananew:
         image: kibana:5.4.3
         environment:
             ELASTICSEARCH_URL: http://elasticsearch:9200
