@@ -101,12 +101,12 @@ services:
         depends_on: 
             - es-master
 
-    kibananew:
+        kibananew:
         image: kibana:5.4.3
         environment:
             ELASTICSEARCH_URL: http://elasticsearch:9200
             SERVER_HOST: 0.0.0.0
-            SERVER_PORT: ${kibana_port}:5601
+            SERVER_PORT: $${kibana_port}:5601
         stdin_open: true
         volumes:
         - /etc/kibana   
