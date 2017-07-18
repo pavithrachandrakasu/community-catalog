@@ -1,45 +1,34 @@
 version: '2'
+volumes:
+  es-storage-volume:
+    driver: local
+    per_container: true
 services:
-  logstash:
-    image: logstash:5
-    volumes:
-    - /etc/logstash/conf.d
-    links:
-    - elasticsearch-clients:elasticsearch
-    ports:
-    - 5000:5000/tcp
-    - 6000:6000/tcp
-    command:
-    - -f
-    - /etc/logstash/conf.d/
-    - --config.string
-    - input { udp { port => 5000 codec => "json" } tcp { port => 6000 codec => "json" } } output { elasticsearch { hosts => "elasticsearch:9200"} }
-    labels:
-      io.rancher.container.hostname_override: container_name
-  logspout:
-    image: bekt/logspout-logstash:latest
+  es-storage:
+    image: rawmind/alpine-volume:0.0.2-1
     environment:
-      LOGSPOUT: ignore
-      ROUTE_URIS: logstash+tcp://logstash:6000
-    stdin_open: true
+      SERVICE_GID: '1000'
+      SERVICE_UID: '1000'
+      SERVICE_VOLUME: /usr/share/elasticsearch/data
+    network_mode: none
     volumes:
-    - /var/run/docker.sock:/var/run/docker.sock
-    tty: true
-    links:
-    - logstash:logstash
+    - es-storage-volume:/usr/share/elasticsearch/data
     labels:
-      io.rancher.scheduler.global: 'true'
-      io.rancher.container.hostname_override: container_name
-  elasticsearch-clients:
+      io.rancher.container.start_once: 'true'
+  es-data:
+    mem_limit: 1073741824
     cap_add:
     - IPC_LOCK
-    image: elasticsearch:5
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.4.2
     environment:
-      ES_JAVA_OPTS: -Xms1g -Xmx1g -Des.path.conf=/usr/share/elasticsearch/config
-      cluster.name: elasticsearch
-      discovery.zen.minimum_master_nodes: '1'
-      discovery.zen.ping.unicast.hosts: elasticsearch-clients
-      network.host: 0.0.0.0
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+      bootstrap.memory_lock: 'true'
+      cluster.name: es-cluster
+      discovery.zen.ping.unicast.hosts: es-master
+      node.data: 'true'
+      node.master: 'false'
+      node.name: $${HOSTNAME}
+      xpack.security.enabled: 'false'
     ulimits:
       memlock:
         hard: -1
@@ -47,25 +36,91 @@ services:
       nofile:
         hard: 65536
         soft: 65536
-    volumes:
-    - /usr/share/elasticsearch/config
-    - /usr/share/elasticsearch/data
+    volumes_from:
+    - es-storage
+    labels:
+      io.rancher.scheduler.affinity:container_label_soft_ne: io.rancher.stack_service.name=$${stack_name}/$${service_name}
+      io.rancher.sidekicks: es-storage,es-sysctl
+      io.rancher.container.hostname_override: container_name
+  es-sysctl:
+    privileged: true
+    image: rawmind/alpine-sysctl:0.1
+    environment:
+      SYSCTL_KEY: vm.max_map_count
+      SYSCTL_VALUE: '262144'
+    network_mode: none
+    labels:
+      io.rancher.container.start_once: 'true'
+  es-client:
+    mem_limit: 1073741824
+    cap_add:
+    - IPC_LOCK
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.4.2
+    environment:
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+      bootstrap.memory_lock: 'true'
+      cluster.name: es-cluster
+      discovery.zen.ping.unicast.hosts: es-master
+      node.data: 'false'
+      node.master: 'false'
+      node.name: $${HOSTNAME}
+      xpack.security.enabled: 'false'
+    ulimits:
+      memlock:
+        hard: -1
+        soft: -1
+      nofile:
+        hard: 65536
+        soft: 65536
+    volumes_from:
+    - es-storage
     ports:
     - 9200:9200/tcp
-    - 9300:9300/tcp
     labels:
+      io.rancher.scheduler.affinity:container_label_soft_ne: io.rancher.stack_service.name=$${stack_name}/$${service_name}
+      io.rancher.sidekicks: es-storage,es-sysctl
       io.rancher.container.hostname_override: container_name
-  kibana:
-    image: kibana:5
+  kibananew:
+    image: kibana:5.4.3
     environment:
       ELASTICSEARCH_URL: http://elasticsearch:9200
       SERVER_HOST: 0.0.0.0
-      SERVER_PORT: '5601'
+      SERVER_PORT: $${kibana_port}:5601
+    stdin_open: true
     volumes:
-    - /etc/kibana/
+    - /etc/kibana
+    tty: true
     links:
-    - elasticsearch-clients:elasticsearch
+    - es-client:elasticsearch
     ports:
     - 5601:5601/tcp
     labels:
+      io.rancher.container.pull_image: always
+  es-master:
+    mem_limit: 1073741824
+    cap_add:
+    - IPC_LOCK
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.4.2
+    environment:
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+      bootstrap.memory_lock: 'true'
+      cluster.name: es-cluster
+      discovery.zen.minimum_master_nodes: '3'
+      discovery.zen.ping.unicast.hosts: es-master
+      node.data: 'false'
+      node.master: 'true'
+      node.name: $${HOSTNAME}
+      xpack.security.enabled: 'false'
+    ulimits:
+      memlock:
+        hard: -1
+        soft: -1
+      nofile:
+        hard: 65536
+        soft: 65536
+    volumes_from:
+    - es-storage
+    labels:
+      io.rancher.scheduler.affinity:container_label_soft_ne: io.rancher.stack_service.name=$${stack_name}/$${service_name}
+      io.rancher.sidekicks: es-storage,es-sysctl
       io.rancher.container.hostname_override: container_name
