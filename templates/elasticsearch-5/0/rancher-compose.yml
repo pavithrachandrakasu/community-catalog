@@ -85,7 +85,13 @@
           label: "# of initial client nodes"
           description: "Set the initial number of client nodes"
           default: 1
-
+        
+        - variable: "kibana_port"
+          description: "Port to expose for Kibana"
+          label: "Kibana Port:"
+          required: true
+          default: 5601
+          type: "int"     
 
 es-master:
   scale: ${minimum_master_nodes}
