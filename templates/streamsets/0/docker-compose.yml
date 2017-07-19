@@ -1,0 +1,36 @@
+version: '2'
+services:
+  sidekick:
+    image: alpine:3.5
+    entrypoint:
+    - chown
+    - -R
+    - 20159:20159
+    - /usr/share/streamsets/data
+    stdin_open: true
+    network_mode: none
+    volumes:
+    - /usr/share/streamsets/data
+    tty: true
+    labels:
+      io.rancher.container.pull_image: always
+      io.rancher.container.start_once: 'true'
+  StreamsetsDC:
+    image: pavithrakc/streamsets-dockerfile:2.6.0.0
+    environment:
+      SDC_DATA: /usr/share/streamsets/data
+    stdin_open: true
+    entrypoint:
+    - /docker-entrypoint.sh
+    - dc
+    external_links:
+    - kafka/broker:broker
+    tty: true
+    volumes_from:
+    - sidekick
+    ports:
+    - 18630:18630/tcp
+    labels:
+      io.rancher.container.pull_image: always
+      io.rancher.scheduler.affinity:container_label_soft_ne: io.rancher.stack_service.name=$${stack_name}/$${service_name}
+      io.rancher.sidekicks: sidekick
