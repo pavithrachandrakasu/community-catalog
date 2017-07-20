@@ -4,7 +4,13 @@ catalog:
     version: "2.5.0.0"
     description: "Conquer Dataflow Chaos"
     minimum_rancher_version: 1.6
-
+    questions:
+        - variable: "streamsets_port"
+          type: "int"
+          required: true
+          label: "Streamsets Port:"
+          description: "Port to expose for Streamsets"
+          default: "es-cluster"
 services:    
   sidekick:
     scale: 1

@@ -16,9 +16,10 @@ services:
       io.rancher.container.pull_image: always
       io.rancher.container.start_once: 'true'
   StreamsetsDC:
-    image: pavithrakc/streamsets-dockerfile:2.6.0.0
+    image: pavithrakc/streamsets-dockerfile:2.5.0.0
     environment:
       SDC_DATA: /usr/share/streamsets/data
+      SERVER_PORT: $${streamsets_port}:5601
     stdin_open: true
     entrypoint:
     - /docker-entrypoint.sh
