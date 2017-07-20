@@ -3,6 +3,9 @@ services:
   sidekick:
     image: alpine:3.5
     entrypoint:
+    - chown
+    - -R
+    - 20159:20159
     - /usr/share/streamsets/data
     stdin_open: true
     network_mode: none
@@ -18,7 +21,8 @@ services:
       SDC_DATA: /usr/share/streamsets/data
     stdin_open: true
     entrypoint:
-    - /docker-entrypoint.sh dc
+    - /docker-entrypoint.sh
+    - dc
     tty: true
     volumes_from:
     - sidekick

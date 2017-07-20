@@ -1,8 +1,11 @@
-.catalog:
+version: '2'
+catalog:
     name: "StreamsetsDC"
-    version: "2.5-rancher"
-    description: " Conquer Dataflow Chaos"
+    version: "2.5.0.0"
+    description: "Conquer Dataflow Chaos"
     minimum_rancher_version: 1.6
+
+services:    
   sidekick:
     scale: 1
     start_on_create: true
