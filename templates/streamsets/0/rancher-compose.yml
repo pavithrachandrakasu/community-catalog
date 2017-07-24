@@ -10,7 +10,7 @@ catalog:
           required: true
           label: "Streamsets Port:"
           description: "Port to expose for Streamsets"
-          default: "es-cluster"
+          default: 18630
 services:    
   sidekick:
     scale: 1
